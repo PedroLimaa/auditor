@@ -10,8 +10,13 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@nuxtjs/tailwindcss": "^6.12.2",
     "nuxt": "^3.14.0",
+    "pdf-parse": "^1.1.1",
+    "read-excel-file": "^5.8.6",
     "vue": "latest",
-    "vue-router": "latest"
+    "vue-router": "latest",
+    "vuetify-nuxt-module": "^0.18.3",
+    "write-excel-file": "^2.0.10"
   }
 }
