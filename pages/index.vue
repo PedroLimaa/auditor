@@ -1,17 +1,16 @@
 <template>
   <v-container grid-list-xs class="bg-neutral-300 pa-16">
     <v-card color="">
-      <v-card-title primary-title> Auditor Fiscal </v-card-title>
+      <v-card-title primary-title>
+        Auditor Fiscal - Sistema de Correção de Tributação
+      </v-card-title>
       <v-card-item>
         <p>
-          Esse sistema compara dois arquivos excel e gera um terceiro com base
-          na comparação dos arquivos.
-        </p>
-        <br />
-        <p>O primeiro arquivo é o anexo 1 de substituição tributária</p>
-        <br />
-        <p>
-          O segundo arquivos é uma base de produtos com as colunas Codigo e NCM
+          Bem-vindo ao Auditor Fiscal, uma ferramenta desenvolvida para ajudar
+          empresas do Simples Nacional a corrigir a tributação dos produtos de
+          maneira fácil e eficiente. Este sistema realiza uma comparação
+          inteligente entre dois arquivos Excel fornecidos e gera um terceiro
+          arquivo atualizado, destacando as correções necessárias de tributação.
         </p>
       </v-card-item>
       <div class="pa-4 text-center">

@@ -1,7 +1,7 @@
 import type { Anexo } from "~/interface/anexo";
 import type { Produto } from "~/interface/produto";
 
-export const compararNcm = (anexo: Anexo[], produto: Produto[]) => {
+export const compararNcm = (ncmAnexo: Anexo[], produtosDb: Produto[]) => {
   const normalizarNcm = (ncm: any, digitos = 4) => {
     if (!ncm) return [];
 
@@ -10,16 +10,18 @@ export const compararNcm = (anexo: Anexo[], produto: Produto[]) => {
     return ncmList.map((ncmA: string) => ncmA.split(".")[0]);
   };
 
-  const ncmAnexo = anexo.flatMap((item) => normalizarNcm(item.ncm));
+  const ncmTratados = ncmAnexo.flatMap((item) => normalizarNcm(item.ncm));
 
-  const produtoNcm = produto.map((item) => {
-    let newNcm = item.ncm?.toString().slice(0, 4);
+  const produtosCorrigidos = produtosDb.map((item) => {
+    let metadeNcm = item.ncm?.toString().slice(0, 4);
 
-    let isSubs = ncmAnexo.filter((ncm1) => newNcm?.includes(ncm1));
+    let correspondencia = ncmTratados.filter((ncmTratado) =>
+      metadeNcm?.includes(ncmTratado)
+    );
     let cst = "000";
     let cso = "102";
     let cfop = "5.102";
-    if (isSubs.length > 0) {
+    if (correspondencia.length > 0) {
       cst = "060";
       cso = "500";
       cfop = "5.405";
@@ -31,6 +33,26 @@ export const compararNcm = (anexo: Anexo[], produto: Produto[]) => {
       cfop,
     };
   });
+  return produtosCorrigidos;
+};
 
-  return produtoNcm;
+export const compararProdutos = (
+  produtosDb: Produto[],
+  produtosCorrigidos: Produto[]
+) => {
+  let tributacaoIgual = 0;
+  let tributacaoDiferente = 0;
+  produtosDb.map((produto) => {
+    let cso = produto.cso?.toString();
+    const produtoCorrespondente = produtosCorrigidos.filter(
+      (novoProduto) => novoProduto.cod === produto.cod
+    )[0];
+    let novoCso = produtoCorrespondente.cso?.toString();
+    if (novoCso === cso) {
+      tributacaoIgual += 1;
+      return;
+    }
+    tributacaoDiferente += 1;
+  });
+  return { tributacaoIgual, tributacaoDiferente };
 };
