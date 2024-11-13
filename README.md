@@ -1,9 +1,11 @@
-Auditor Fiscal
+Auditor Fiscal - Sistema de Correção de Tributação
 
-Esse sistema compara dois arquivos excel e gera um terceiro com base na comparação dos arquivos.
+Essa ferramenta compara dois arquivos excel fornecidos pelo usuario e gera um terceiro a partir da comparação entre esses arquivos.
 
+O primeiro arquivo deve ser o Anexo 1 de substituição tributária da sefaz com as colunas Item, CEST, NCM, Descrição, Acordos, MVA Ajustada e MVA Original (nessa ordem). 
 
-O primeiro arquivo é o anexo 1 de substituição tributária
+O segundo arquivo é uma base de produtos com as colunas Codigo, NCM e CSO (nessa ordem).
 
+Ambos arquivos no formato excel (.xlsx)
 
-O segundo arquivos é uma base de produtos com as colunas Codigo e NCM
+Ao final da comparação a ferramenta gera um arquivo excel (.xlsx) com a base de produtos e a tributação corrigida.
