@@ -2,17 +2,19 @@ import type { Anexo } from "~/interface/anexo";
 import type { Produto } from "~/interface/produto";
 
 export const compararNcm = (ncmAnexo: Anexo[], produtosDb: Produto[]) => {
-  const normalizarNcm = (ncm: any, digitos = 4) => {
+  const normalizarNcm = (ncm: any) => {
     if (!ncm) return [];
 
-    const ncmList = ncm.toString().split("\n");
+    const quebrarNcm = ncm.toString().split("\n");
+    const ncmTratado = quebrarNcm.map((ncmA: string) => ncmA.split(".")[0]);
 
-    return ncmList.map((ncmA: string) => ncmA.split(".")[0]);
+    return ncmTratado;
   };
 
   const ncmTratados = ncmAnexo.flatMap((item) => normalizarNcm(item.ncm));
 
   const produtosCorrigidos = produtosDb.map((item) => {
+  
     let metadeNcm = item.ncm?.toString().slice(0, 4);
 
     let correspondencia = ncmTratados.filter((ncmTratado) =>

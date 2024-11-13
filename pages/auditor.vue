@@ -13,7 +13,7 @@
           A base de produtos deve conter as colunas obrigatórias: Código, NCM e
           CSO nessa ordem.
         </p>
-        <br>
+        <br />
         <p>Ambos no formato Excel (.xlsx).</p>
       </v-card-item>
     </v-card>
@@ -49,27 +49,29 @@
             }}</v-chip>
           </div> -->
           <div class="mb-4">
-            Produtos corrigidos
-            <v-chip color="green" size="large" elevation="5" class="ml-4">{{
-              comparacao.tributacaoDiferente
+            <v-chip color="green" size="large" elevation="5" class="mr-4">{{
+              tributacaoDiferente
             }}</v-chip>
+            Produtos corrigidos
           </div>
         </div>
       </v-card>
     </div>
+    <pre></pre>
   </v-container>
 </template>
 <script setup>
   import readXlsxFile from "read-excel-file";
   import writeXlsxFile from "write-excel-file";
   import { compararNcm, compararProdutos } from "~/utils/comparacao";
+  const { $toast } = useNuxtApp();
   const { currentTime } = useCurrentTime();
   const excelFileAnexo = ref([]);
   const excelFileProduto = ref([]);
   const itemsAnexo1 = ref([]);
   const itemsProdutos = ref([]);
   const produtosCorrigidos = ref([]);
-  const comparacao = ref({});
+  const tributacaoDiferente = ref({});
 
   const numeroNcmAnexo = computed(() => {
     let numeroNcm = 0;
@@ -125,7 +127,7 @@
       itemsProdutos.value,
       resultadoComparacao
     );
-    comparacao.value = produtosComparados;
+    tributacaoDiferente.value = produtosComparados.tributacaoDiferente;
 
     const rows = [];
     const header = [
@@ -148,6 +150,14 @@
       rows.push(row);
     });
     const fileName = currentTime.value;
-    await writeXlsxFile(rows, { fileName: `${fileName}.xlsx` });
+    try {
+      await writeXlsxFile(rows, { fileName: `${fileName}.xlsx` });
+      itemsProdutos.value = [];
+      $toast.success("Arquivo gerado com sucesso!");
+    } catch (error) {
+      $toast.error(
+        "Erro ao gerar arquivo excel. por favor, verifique seu arquivo de produtos e tente novamente"
+      );
+    }
   };
 </script>
