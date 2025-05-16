@@ -14,11 +14,17 @@
         </p>
       </v-card-item>
       <div class="pa-4 text-center">
-        <v-btn
+        <v-btn class="mx-4"
           href="/auditor"
           color="primary"
           appendIcon="mdi-arrow-top-right-thick"
-          >Auditor</v-btn
+          >Auditor - ICMS</v-btn
+        >
+        <v-btn
+          href="/corrigir-ncm"
+          color="primary"
+          appendIcon="mdi-arrow-top-right-thick"
+          >Corrigir NCM</v-btn
         >
       </div>
     </v-card>

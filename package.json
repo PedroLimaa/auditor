@@ -17,6 +17,7 @@
     "nuxt": "^3.14.0",
     "pg": "^8.13.1",
     "read-excel-file": "^5.8.6",
+    "string-similarity": "^4.0.4",
     "vue": "latest",
     "vue-router": "latest",
     "vue3-toastify": "^0.2.4",
