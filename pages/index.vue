@@ -7,7 +7,7 @@
       <v-card-item>
         <p>
           Bem-vindo ao Auditor Fiscal, uma ferramenta desenvolvida para ajudar
-          empresas do Simples Nacional a corrigir a tributação dos produtos de
+          empresas a corrigir a tributação dos produtos de
           maneira fácil e eficiente. Este sistema realiza uma comparação
           inteligente entre dois arquivos Excel fornecidos e gera um terceiro
           arquivo atualizado, destacando as correções necessárias de tributação.

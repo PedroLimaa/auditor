@@ -1,5 +1,6 @@
 <template>
   <v-container class="bg-neutral-300">
+    <Switch title="Regime" trueValue="Simples" falseValue="Normal" />
     <v-card class="mx-4 my-6">
       <v-card-title> Auditor Fiscal </v-card-title>
       <v-card-item class="my-2">
@@ -24,7 +25,7 @@
       accept=".xlsx, .xls" />
     <v-file-input
       v-model="excelFileProduto"
-      label="Arquivo de produtos (Codigo | NCM | CSO)"
+      :label="`Arquivo de produtos (Codigo | NCM | ${codTibutacao})`"
       @change="uploadProdutos"
       accept=".xlsx, .xls" />
     <div class="flex justify-center align-center">
@@ -122,6 +123,14 @@
   import readXlsxFile from "read-excel-file";
   import writeXlsxFile from "write-excel-file";
   import { compararNcm, compararProdutos } from "~/utils/comparacao";
+  const mainStore = useMainStore();
+  const { switchState } = storeToRefs(mainStore);
+  const codTibutacao = computed(() => {
+    if (switchState.value) {
+      return "CSO";
+    }
+    return "CST";
+  });
   const { $toast } = useNuxtApp();
   const { currentTime } = useCurrentTime();
   const excelFileAnexo = ref([]);
@@ -215,9 +224,12 @@
     codProdutosDiferentes.value = produtosComparados.codProdutoDiferente;
     produtosCorretos.value = produtosComparados.produtosCorretos;
     produtosIncorretos.value = produtosComparados.produtosIncorretos;
+  };
 
+  const gerarExcel = async () => {
+    const fileName = currentTime.value;
     rows.push(header);
-    resultadoComparacao.forEach((item) => {
+    produtosCorrigidos.value.forEach((item) => {
       let row = [];
       row.push(
         { type: Number, value: item.cod },
@@ -228,10 +240,6 @@
       );
       rows.push(row);
     });
-  };
-
-  const gerarExcel = async () => {
-    const fileName = currentTime.value;
     try {
       await writeXlsxFile(rows, { fileName: `${fileName}.xlsx` });
       itemsProdutos.value = [];

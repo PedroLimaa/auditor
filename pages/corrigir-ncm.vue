@@ -176,14 +176,6 @@
       .trim();
     const ncmAtual = produto[ncmKey]?.toString().trim();
 
-    if (ncmAtual) {
-      TODO: "acrescentar funcao de comparacao no ncm atual com o banco de dados";
-      produto[ncmKey] = ncmAtual;
-      produto.origemNcm = `Original(NCM: ${ncmAtual})`;
-      itensNaoCorrigidos.push(produto);
-      return produto;
-    }
-
     const candidatos = bancoDeDados.filter(
       (p) =>
         p[ncmKey] &&
@@ -206,15 +198,33 @@
 
     const resultado = findBestMatch(descricao, descricoes);
 
-    if (resultado.bestMatch.rating < 0.55) {
-      produto.origemNcm = "Sem correspondência com confiança mínima";
-      itensNaoEncontrados.push(produto);
+    if (resultado.bestMatch.rating < 0.52) {
+      if (!produto.ncm) {
+        itensNaoEncontrados.push(produto);
+        produto.origemNcm = "Sem correspondência com confiança mínima";
+      }
       return produto;
     }
 
     const melhorIndice = resultado.bestMatchIndex;
     const produtoSimilar = candidatos[melhorIndice];
     const ncmSugerido = produtoSimilar[ncmKey];
+
+    if (ncmAtual) {
+      if (ncmAtual === ncmSugerido.toString()) {
+        produto[ncmKey] = ncmAtual;
+        produto.origemNcm = `Original(NCM: ${ncmAtual})`;
+        produto.rating = "original";
+        itensNaoCorrigidos.push(produto);
+        return produto;
+      }
+
+      produto[ncmKey] = ncmSugerido.toString();
+      produto.origemNcm = `Corrigido (NCM: ${ncmSugerido}) com base em ${produtoSimilar[descricaoKey]}, ncm anterior ${ncmAtual}`;
+      produto.rating = resultado.bestMatch.rating;
+      itensCorrigidos.push(produto);
+      return produto;
+    }
 
     produto[ncmKey] = ncmSugerido.toString();
     produto.origemNcm = `Sugerido (NCM: ${ncmSugerido}) com base em ${produtoSimilar[descricaoKey]}`;
