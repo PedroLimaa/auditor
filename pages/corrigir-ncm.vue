@@ -110,6 +110,7 @@
     { value: "descricao", fontWeight: "bold" },
     { value: "ncm", fontWeight: "bold" },
     { value: "ncm origem", fontWeight: "bold" },
+    { value: "rating", fontWeight: "bold" },
   ];
 
   const uploadBd = async () => {
@@ -216,7 +217,8 @@
     const ncmSugerido = produtoSimilar[ncmKey];
 
     produto[ncmKey] = ncmSugerido.toString();
-    produto.origemNcm = `Sugerido (NCM: ${ncmSugerido}) com base em ${produtoSimilar[descricaoKey]}, com confiança de ${resultado.bestMatch.rating}`;
+    produto.origemNcm = `Sugerido (NCM: ${ncmSugerido}) com base em ${produtoSimilar[descricaoKey]}`;
+    produto.rating = resultado.bestMatch.rating;
     itensCorrigidos.push(produto);
     return produto;
   };
@@ -231,6 +233,7 @@
         { type: String, value: String(item.descricao || "") },
         { type: String, value: String(item.ncm || "") },
         { type: String, value: String(item.origemNcm || "") },
+        { type: Number, value: Number(item.rating || 0) },
       ];
       rows.push(row);
     });
