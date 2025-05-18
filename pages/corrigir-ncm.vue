@@ -1,4 +1,32 @@
 <template>
+  <v-overlay
+    :model-value="loading"
+    class="align-center justify-center"
+    persistent>
+    <v-card class="pa-6" elevation="10" max-width="400">
+      <div class="text-center mb-4">
+        <v-progress-circular
+          indeterminate
+          color="primary"
+          size="60"
+          width="6"
+          class="mb-4" />
+        <h3 class="text-h6 font-weight-bold">Analisando produtos...</h3>
+        <p class="text-caption">Por favor, aguarde.</p>
+      </div>
+      <v-progress-linear
+        :value="progresso"
+        height="18"
+        color="blue"
+        striped
+        rounded>
+        <template #default>
+          <strong>{{ Math.round(progresso) }}%</strong>
+        </template>
+      </v-progress-linear>
+    </v-card>
+  </v-overlay>
+
   <v-container class="bg-neutral-300">
     <v-card class="mx-4 my-6">
       <v-card-title> Correção de NCM </v-card-title>
@@ -17,9 +45,8 @@
       @change="uploadProdutos"
       accept=".xlsx, .xls" />
     <div v-if="itemsBd.length > 0 && itemsCorrecao.length > 0" class="my-2">
-      <v-btn @click="comparar" block color="primary" dark>Comparar</v-btn>
+      <v-btn @click="analisar" block color="primary" dark>analisar</v-btn>
     </div>
-    <div v-if="loading">Carregando!</div>
 
     <v-divider class="my-2"></v-divider>
     <v-row>
@@ -72,6 +99,8 @@
   const { $toast } = useNuxtApp();
   const rows = [];
   const loading = ref(false);
+  const progresso = ref(0);
+  const totalItens = ref(0);
   const itensCorrigidos = [];
   const itensNaoCorrigidos = [];
   const itensNaoEncontrados = [];
@@ -112,65 +141,84 @@
     });
   };
 
-  const comparar = () => {
+  const analisar = async () => {
     loading.value = true;
-    const resultado = preencherNcm(itemsCorrecao.value, itemsBd.value);
+    progresso.value = 0;
+
+    const total = itemsCorrecao.value.length;
+    totalItens.value = total;
+
+    const resultado = [];
+
+    for (let i = 0; i < total; i++) {
+      const produto = itemsCorrecao.value[i];
+      const corrigido = corrigirProduto(produto, itemsBd.value);
+      resultado.push(corrigido);
+
+      progresso.value = ((i + 1) / total) * 100;
+
+      await new Promise((resolve) => setTimeout(resolve, 1));
+    }
+
     baseCorrigida.value = resultado;
+    loading.value = false;
   };
 
-  const preencherNcm = (
-    produtosParaCorrigir,
+  const corrigirProduto = (
+    produto,
     bancoDeDados,
     descricaoKey = "descricao",
     ncmKey = "ncm"
   ) => {
-    return produtosParaCorrigir.map((produto) => {
-      const descricaoRaw = produto[descricaoKey];
-      const descricao =
-        typeof descricaoRaw === "string"
-          ? descricaoRaw.toLowerCase().trim()
-          : "";
+    const descricao = String(produto[descricaoKey] || "sem descricao")
+      .toLowerCase()
+      .trim();
+    const ncmAtual = produto[ncmKey]?.toString().trim();
 
-      const ncmAtual = produto[ncmKey]?.toString().trim();
+    if (ncmAtual) {
+      TODO: "acrescentar funcao de comparacao no ncm atual com o banco de dados";
+      produto[ncmKey] = ncmAtual;
+      produto.origemNcm = `Original(NCM: ${ncmAtual})`;
+      itensNaoCorrigidos.push(produto);
+      return produto;
+    }
 
-      if (ncmAtual) {
-        produto.origemNcm = `Original (NCM: ${ncmAtual})`;
-        itensNaoCorrigidos.push(produto);
-        return produto;
-      }
+    const candidatos = bancoDeDados.filter(
+      (p) =>
+        p[ncmKey] &&
+        String(p[descricaoKey] || "")
+          .toLowerCase()
+          .trim() !== descricao
+    );
 
-      const candidatos = bancoDeDados.filter((p) => {
-        const desc = p[descricaoKey];
-        return (
-          p[ncmKey] && typeof desc === "string" && desc.toLowerCase().trim()
-        );
-      });
+    if (candidatos.length === 0) {
+      produto.origemNcm = "NCM não encontrado no banco de dados";
+      itensNaoEncontrados.push(produto);
+      return produto;
+    }
 
-      if (candidatos.length === 0 || !descricao) {
-        produto.origemNcm = "NCM não encontrado no banco de dados";
-        itensNaoEncontrados.push(produto);
-        return produto;
-      }
+    const descricoes = candidatos.map((p) =>
+      String(p[descricaoKey] || "")
+        .toLowerCase()
+        .trim()
+    );
 
-      const descricoes = candidatos.map((p) =>
-        p[descricaoKey].toLowerCase().trim()
-      );
-      const resultado = findBestMatch(descricao, descricoes);
+    const resultado = findBestMatch(descricao, descricoes);
 
-      if (resultado.bestMatch.rating < 0.4) {
-        produto.origemNcm = "Sem correspondência com confiança mínima";
-        itensNaoEncontrados.push(produto);
-        return produto;
-      }
-      const melhorIndice = resultado.bestMatchIndex;
-      const produtoSimilar = candidatos[melhorIndice];
+    if (resultado.bestMatch.rating < 0.55) {
+      produto.origemNcm = "Sem correspondência com confiança mínima";
+      itensNaoEncontrados.push(produto);
+      return produto;
+    }
 
-      const ncmSugerido = produtoSimilar[ncmKey];
-      produto[ncmKey] = ncmSugerido.toString();
-      produto.origemNcm = `Sugerido (NCM: ${ncmSugerido}) com base em "${produtoSimilar[descricaoKey]}"`;
-      itensCorrigidos.push(produto);
-      return produto, itensCorrigidos, itensNaoCorrigidos, itensNaoEncontrados;
-    });
+    const melhorIndice = resultado.bestMatchIndex;
+    const produtoSimilar = candidatos[melhorIndice];
+    const ncmSugerido = produtoSimilar[ncmKey];
+
+    produto[ncmKey] = ncmSugerido.toString();
+    produto.origemNcm = `Sugerido (NCM: ${ncmSugerido}) com base em ${produtoSimilar[descricaoKey]}, com confiança de ${resultado.bestMatch.rating}`;
+    itensCorrigidos.push(produto);
+    return produto;
   };
 
   const gerarExcel = async () => {
