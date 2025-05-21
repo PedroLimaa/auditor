@@ -54,6 +54,8 @@ export const compararProdutos = (
   produtosDb: Produto[],
   produtosCorrigidos: Produto[]
 ) => {
+  // const mainStore = useMainStore();
+  // const {switchState} = storeToRefs(mainStore);
   let tributacaoIgual = 0;
   let tributacaoDiferente = 0;
   const codProdutoDiferente: number[] = [];
@@ -85,3 +87,4 @@ export const compararProdutos = (
     codProdutoDiferente,
   };
 };
+

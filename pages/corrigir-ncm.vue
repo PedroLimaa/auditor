@@ -70,10 +70,10 @@
           <v-card-item>
             Total de itens não corrigidos: {{ itensNaoCorrigidos.length }}
           </v-card-item>
-          <v-card-item>
+          <v-card-item> 
             Total de itens com NCM não encontrados:
             {{ itensNaoEncontrados.length }}
-          </v-card-item>
+          </v-card-item> 
         </v-card>
       </v-col>
     </v-row>
@@ -101,10 +101,10 @@
   const loading = ref(false);
   const progresso = ref(0);
   const totalItens = ref(0);
-  const itensCorrigidos = [];
-  const itensNaoCorrigidos = [];
-  const itensNaoEncontrados = [];
+  const itensCorrigidos = ref([]);
+  const itensNaoCorrigidos = ref([]);
   const baseCorrigida = ref([]);
+  const itensNaoEncontrados = ref([]);
   const header = [
     { value: "cod", fontWeight: "bold" },
     { value: "descricao", fontWeight: "bold" },
@@ -163,8 +163,15 @@
 
     baseCorrigida.value = resultado;
     loading.value = false;
+    baseCorrigida.value.map((prod) => {
+      if (!prod.ncm) {
+        itensNaoEncontrados.value.push(prod);
+        return prod;
+      }
+    });
   };
 
+  TODO: "separar essa função em outro arquivo";
   const corrigirProduto = (
     produto,
     bancoDeDados,
@@ -181,12 +188,11 @@
         p[ncmKey] &&
         String(p[descricaoKey] || "")
           .toLowerCase()
-          .trim() !== descricao
+          .trim()
     );
 
     if (candidatos.length === 0) {
       produto.origemNcm = "NCM não encontrado no banco de dados";
-      itensNaoEncontrados.push(produto);
       return produto;
     }
 
@@ -200,7 +206,6 @@
 
     if (resultado.bestMatch.rating < 0.52) {
       if (!produto.ncm) {
-        itensNaoEncontrados.push(produto);
         produto.origemNcm = "Sem correspondência com confiança mínima";
       }
       return produto;
@@ -213,23 +218,27 @@
     if (ncmAtual) {
       if (ncmAtual === ncmSugerido.toString()) {
         produto[ncmKey] = ncmAtual;
-        produto.origemNcm = `Original(NCM: ${ncmAtual})`;
-        produto.rating = "original";
-        itensNaoCorrigidos.push(produto);
+        produto.origemNcm = `NCM Correto! (NCM: ${ncmAtual})`;
+        itensNaoCorrigidos.value.push(produto);
         return produto;
       }
 
-      produto[ncmKey] = ncmSugerido.toString();
-      produto.origemNcm = `Corrigido (NCM: ${ncmSugerido}) com base em ${produtoSimilar[descricaoKey]}, ncm anterior ${ncmAtual}`;
-      produto.rating = resultado.bestMatch.rating;
-      itensCorrigidos.push(produto);
+      if (resultado.bestMatch.rating > 0.65) {
+        produto[ncmKey] = ncmSugerido.toString();
+        produto.origemNcm = `Corrigido (NCM: ${ncmSugerido}) com base em ${produtoSimilar[descricaoKey]}, ncm anterior ${ncmAtual}`;
+        produto.rating = resultado.bestMatch.rating;
+        itensCorrigidos.value.push(produto);
+        return produto;
+      }
+
+      produto.origemNcm = `Não alterado (NCM: ${ncmAtual})`;
       return produto;
     }
 
     produto[ncmKey] = ncmSugerido.toString();
     produto.origemNcm = `Sugerido (NCM: ${ncmSugerido}) com base em ${produtoSimilar[descricaoKey]}`;
     produto.rating = resultado.bestMatch.rating;
-    itensCorrigidos.push(produto);
+    itensCorrigidos.value.push(produto);
     return produto;
   };
 
